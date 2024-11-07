@@ -9,10 +9,10 @@ export class Location {
     @Column()
     building: string
 
-    @Column()
+    @Column({ unique: true })
     locationName: string
 
-    @Column()
+    @Column({ unique: true })
     locationNumber: string
 
     @Column('decimal', { precision: 20, scale: 3 })

@@ -2,6 +2,15 @@ import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger, HttpStatu
 import { QueryFailedError } from 'typeorm'
 import { Request, Response } from 'express'
 
+/**
+ * Exception filter for intercepting error and handle request response.
+ * Handling DB query and HTTP request errors.
+ *
+ * @export
+ * @class HttpExceptionFilter
+ * @typedef {HttpExceptionFilter}
+ * @implements {ExceptionFilter}
+ */
 @Catch(HttpException, QueryFailedError)
 export class HttpExceptionFilter implements ExceptionFilter {
     logger: Logger

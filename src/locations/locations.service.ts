@@ -5,6 +5,13 @@ import { CreateLocationDto } from './dto/create-location.dto'
 import { UpdateLocationDto } from './dto/update-location.dto'
 import { Location } from './entities/location.entity'
 
+/**
+ * Location service that managing all the CRUD of Location
+ *
+ * @export
+ * @class LocationsService
+ * @typedef {LocationsService}
+ */
 @Injectable()
 export class LocationsService {
     logger: Logger
@@ -16,10 +23,22 @@ export class LocationsService {
         this.logger = new Logger(LocationsService.name)
     }
 
+    /**
+     * Fetches all root locations (without parent location).
+     *
+     * @returns {Promise<Location[]>} List of Locations.
+     */
     findAll(): Promise<Location[]> {
         return this.locationRepository.findTrees()
     }
 
+    /**
+     * Find a specific location with ID.
+     *
+     * @async
+     * @param {number} id - The ID of the location to fetch.
+     * @returns {Promise<Location>} Location data.
+     */
     async findOne(id: number): Promise<Location> {
         const location = await this.locationRepository.findOne({
             where: { id },
@@ -32,6 +51,13 @@ export class LocationsService {
         return location
     }
 
+    /**
+     * Create new Location using location data
+     *
+     * @async
+     * @param {CreateLocationDto} createLocationDto - New location data in format
+     * @returns {Promise<Location>} Created Location including created ID
+     */
     async create(createLocationDto: CreateLocationDto): Promise<Location> {
         const location = this.locationRepository.create(createLocationDto)
         let parent: Location
@@ -56,6 +82,14 @@ export class LocationsService {
         return this.locationRepository.save(location)
     }
 
+    /**
+     * Update location with ID using location data
+     *
+     * @async
+     * @param {number} id - ID of the Location to be updated
+     * @param {UpdateLocationDto} updateLocationDto - Update location data in format
+     * @returns {Promise<Location>} Updated Location
+     */
     async update(id: number, updateLocationDto: UpdateLocationDto): Promise<Location> {
         const location = await this.findOne(id)
         let newParent: Location
@@ -90,6 +124,13 @@ export class LocationsService {
         return await this.locationRepository.save(location)
     }
 
+    /**
+     * Delete a location with ID
+     *
+     * @async
+     * @param {number} id - ID of the Location to be deleted
+     * @returns {Promise<void>} Function will throw error on any deleting issue
+     */
     async remove(id: number): Promise<void> {
         const location = await this.findOne(id)
 

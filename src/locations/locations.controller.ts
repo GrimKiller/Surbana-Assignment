@@ -51,14 +51,27 @@ export class LocationsController {
 
     /**
      * PATCH /location/<id>
-     * API for patching location with ID
+     * API for patching location with ID, only change what needed
      *
      * @param {string} id - URL params for location ID
      * @param {UpdateLocationDto} updateLocationDto - Location data
      * @returns {Promise<Location>}
      */
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updateLocationDto: UpdateLocationDto) {
+    patch(@Param('id') id: string, @Body() updateLocationDto: UpdateLocationDto) {
+        return this.locationsService.patch(+id, updateLocationDto)
+    }
+
+    /**
+     * PUT /location/<id>
+     * API for updating location with ID overwriting all the missing data
+     *
+     * @param {string} id - URL params for location ID
+     * @param {UpdateLocationDto} updateLocationDto - Location data
+     * @returns {Promise<Location>}
+     */
+    @Put(':id')
+    update(@Param('id') id: string, @Body() updateLocationDto: CreateLocationDto) {
         return this.locationsService.update(+id, updateLocationDto)
     }
 

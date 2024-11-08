@@ -72,26 +72,33 @@ export class LocationsService {
                 throw new NotFoundException(`No parent location with ID ${createLocationDto.parentId}!`)
             }
         } else {
-            const parentNumber = createLocationDto.locationNumber.substring(0, createLocationDto.locationNumber.lastIndexOf('-'))
+            const parentNumber = location.getLocationParentNumber()
             parent = await this.locationRepository.findOne({
                 where: [{ locationNumber: parentNumber }],
             })
         }
 
         location.parent = parent
-        return this.locationRepository.save(location)
+        try {
+            const savedLocation = this.locationRepository.save(location)
+            return savedLocation
+        } catch (error) {
+            this.logger.error(`Error on creating location`, error)
+            throw new NotFoundException(`Error on creating location!`)
+        }
     }
 
     /**
-     * Update location with ID using location data
+     * Patch location with ID using location data
      *
      * @async
-     * @param {number} id - ID of the Location to be updated
-     * @param {UpdateLocationDto} updateLocationDto - Update location data in format
-     * @returns {Promise<Location>} Updated Location
+     * @param {number} id - ID of the Location to be patched
+     * @param {UpdateLocationDto} updateLocationDto - Patch location data in format
+     * @returns {Promise<Location>} Patched Location
      */
-    async update(id: number, updateLocationDto: UpdateLocationDto): Promise<Location> {
+    async patch(id: number, updateLocationDto: UpdateLocationDto): Promise<Location> {
         const location = await this.findOne(id)
+        Object.assign(location, updateLocationDto)
         let newParent: Location
 
         if (updateLocationDto.parentId) {
@@ -104,9 +111,54 @@ export class LocationsService {
                 throw new NotFoundException(`No parent location with ID ${updateLocationDto.parentId}!`)
             }
         } else {
-            const parentNumber = updateLocationDto.locationNumber.substring(0, updateLocationDto.locationNumber.lastIndexOf('-'))
             newParent = await this.locationRepository.findOne({
-                where: [{ locationNumber: parentNumber }],
+                where: [{ locationNumber: location.getLocationParentNumber() }],
+            })
+        }
+
+        if (newParent) {
+            const descendants = await this.locationRepository.findDescendants(location)
+            if (descendants.find((loc) => loc.id === newParent.id)) {
+                this.logger.error(`Parent location with ID ${updateLocationDto.parentId} is decendant of updating location!`)
+                throw new ConflictException(`Parent location with ID ${updateLocationDto.parentId} is decendant of updating location!`)
+            }
+
+            location.parent = newParent
+        }
+
+        try {
+            return await this.locationRepository.save(location)
+        } catch (error) {
+            this.logger.error(`Error on updating location`, error)
+            throw new NotFoundException(`Error on updating location!`)
+        }
+    }
+
+    /**
+     * Update location with ID using location data
+     *
+     * @async
+     * @param {number} id - ID of the Location to be updated
+     * @param {UpdateLocationDto} updateLocationDto - Update location data in format
+     * @returns {Promise<Location>} Updated Location
+     */
+    async update(id: number, updateLocationDto: CreateLocationDto): Promise<Location> {
+        const location = await this.findOne(id)
+        Object.assign(location, updateLocationDto)
+        let newParent: Location
+
+        if (updateLocationDto.parentId) {
+            newParent = await this.locationRepository.findOne({
+                where: { id: updateLocationDto.parentId },
+            })
+
+            if (!newParent) {
+                this.logger.error(`Parent location not found with ID ${updateLocationDto.parentId}!`)
+                throw new NotFoundException(`No parent location with ID ${updateLocationDto.parentId}!`)
+            }
+        } else {
+            newParent = await this.locationRepository.findOne({
+                where: [{ locationNumber: location.getLocationParentNumber() }],
             })
         }
 
@@ -117,11 +169,14 @@ export class LocationsService {
                 throw new ConflictException(`Parent location with ID ${updateLocationDto.parentId} is decendant of updating location!`)
             }
         }
-
         location.parent = newParent
-        Object.assign(location, updateLocationDto)
 
-        return await this.locationRepository.save(location)
+        try {
+            return await this.locationRepository.save(location)
+        } catch (error) {
+            this.logger.error(`Error on updating location`, error)
+            throw new NotFoundException(`Error on updating location!`)
+        }
     }
 
     /**

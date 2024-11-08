@@ -23,4 +23,8 @@ export class Location {
 
     @TreeChildren()
     children: Location[]
+
+    getLocationParentNumber(): string {
+        return this.locationNumber.substring(0, this.locationNumber.lastIndexOf('-'))
+    }
 }
